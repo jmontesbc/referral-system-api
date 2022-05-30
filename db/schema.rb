@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_05_28_180841) do
+ActiveRecord::Schema.define(version: 2022_05_30_143837) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -30,6 +30,21 @@ ActiveRecord::Schema.define(version: 2022_05_28_180841) do
     t.index ["action_id"], name: "index_permissions_on_action_id"
     t.index ["user_id"], name: "index_permissions_on_user_id"
     t.index ["view_id"], name: "index_permissions_on_view_id"
+  end
+
+  create_table "positions", force: :cascade do |t|
+    t.text "requirements"
+    t.integer "grade"
+    t.string "client"
+    t.integer "num_positions"
+    t.float "referal_bonus"
+    t.boolean "active"
+    t.string "branch_refered_for"
+    t.integer "priority"
+    t.integer "bullhorn_id"
+    t.integer "modify_by"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "roles", force: :cascade do |t|
