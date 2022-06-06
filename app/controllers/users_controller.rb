@@ -4,21 +4,25 @@ class UsersController < ApplicationController
   end
 
   def create
-    user = User.create(user_params)
-
-    if user.save
-      render json: user, status: :created
-    else
-      render json: user.errors, status: :unproccessable_entity
+    user = User.new(user_params)
+    begin
+      binding.pry
+      if user.save
+        render json: user, status: :created
+      else
+        render json: user.errors, status: :unproccessable_entity
+      end
+    rescue StandardError => e
+      Rails.logger.error("Error message: #{e.message}", e)
     end
   end
 
   def show
-    render json: User.where(id: user_params[:id]).and(active: true)
+    render json: User.where(id: user_params[:email]).and(active: true)
   end
 
   def update
-    user = User.find(user_params[:id])
+    user = User.find(user_params[:email])
     if user.update(user_params)
       render json: user, status: :updated
     else
@@ -28,7 +32,7 @@ class UsersController < ApplicationController
   end
 
   def delete
-    user = User.find(user_params[:id])
+    user = User.find(user_params[:email])
     if user.update(active: false)
       render json: user, status: :deleted
     else
@@ -40,7 +44,7 @@ class UsersController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:id, :name, :active)
+    params.require(:user).permit(:email, :name, :role_id)
   end
 
 end
