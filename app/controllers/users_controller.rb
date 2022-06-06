@@ -30,7 +30,7 @@ class UsersController < ApplicationController
   end
 
   def update
-    user = User.find(user_params[:email])
+    user = User.find(params[:id])
     if user.update(user_params)
       render json: user, status: :ok
     else
@@ -38,10 +38,10 @@ class UsersController < ApplicationController
     end
   end
 
-  def delete
-    user = User.find(user_params[:email])
+  def destroy
+    user = User.find(params[:id])
     if user.update(active: false)
-      render json: user, status: :deleted
+      render json: user, status: :ok
     else
       render json: user.errors, status: :unproccessable_entity
     end
@@ -50,7 +50,7 @@ class UsersController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:email, :name, :role_id)
+    params.require(:user).permit(:email, :name, :role_id, :active)
   end
 
 end
