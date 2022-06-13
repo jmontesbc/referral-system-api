@@ -5,6 +5,7 @@ class UsersController < ApplicationController
 
   def create
     user = User.new(user_params)
+    # TODO: Verify if user has permissions to set role of the new user
     begin
       if user.save
         render json: user, status: :created
