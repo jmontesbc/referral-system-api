@@ -17,41 +17,54 @@ class UsersController < ApplicationController
   end
 
   def show
-    user = User.find(params[:id])
-    begin
-      if user.active
-        render json: user, status: :ok
-      else
-        render json: user.errors, status: :not_found
+    binding.pry
+    unless params[:id].is_a? Numeric
+      render json: { 'error' => 'id it is not a numeric value' }, status: :unprocessable_entity
+    else
+      user = User.find(params[:id])
+      begin
+        if user.active
+          render json: user, status: :ok
+        else
+          render json: user.errors, status: :not_found
+        end
+      rescue StandardError => e
+        Rails.logger.error("Error while retrieving user #{e.message}")
       end
-    rescue StandardError => e
-      Rails.logger.error("Error while retrieving user #{e.message}")
     end
   end
 
   def update
-    user = User.find(params[:id])
-    begin
-      if user.update(user_params)
-        render json: user, status: :ok
-      else
-        render json: user.errors, status: :unprocessable_entity
+    unless params[:id].is_a? Numeric
+      render json: { 'error' => 'id it is not a numeric value' }, status: :unprocessable_entity
+    else
+      user = User.find(params[:id])
+      begin
+        if user.update(user_params)
+          render json: user, status: :ok
+        else
+          render json: user.errors, status: :unprocessable_entity
+        end
+      rescue StandardError => e
+        error_email_message(e)
       end
-    rescue StandardError => e
-      error_email_message(e)
     end
   end
 
   def delete
-    user = User.find(params[:id])
-    begin
-      if user.update(active: false)
-        render json: user, status: :ok
-      else
-        render json: user.errors, status: :unprocessable_entity
+    unless params[:id].is_a? Numeric
+      render json: { 'error' => 'id it is not a numeric value' }, status: :unprocessable_entity
+    else
+      user = User.find(params[:id])
+      begin
+        if user.update(active: false)
+          render json: user, status: :ok
+        else
+          render json: user.errors, status: :unprocessable_entity
+        end
+      rescue StandardError => e
+        error_email_message(e)
       end
-    rescue StandardError => e
-      error_email_message(e)
     end
   end
 
