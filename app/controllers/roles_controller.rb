@@ -13,13 +13,25 @@ class RolesController < ApplicationController
         render json: role.errors, status: :unprocessable_entity
       end
     rescue StandardError => e
-      Rails.logger.error("Error while creating new role: #{e.message}", e)
+      Rails.logger.error("Error while creating new role: #{e.message}")
+      render json: {
+        'message': 'Error while creating a new role',
+        'errors': e.message
+      }, status: :internal_server_error
     end
   end
 end
 
 private
 
+def raise_error(message)
+  Rails.logger.error(message)
+  render json: {
+    'message': message
+  }, status: :unprocessable_entity
+end
+
 def role_params
-  params.require(:role).permit(:name)
+  params.require(:name)
+  params.permit(:name)
 end

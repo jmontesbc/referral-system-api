@@ -4,54 +4,96 @@ class UsersController < ApplicationController
   end
 
   def create
-    user = User.new(user_params)
     # TODO: Verify if user has permissions to set role of the new user
     begin
-      if user.save
-        render json: user, status: :created
-      else
-        render json: user.errors, status: :unprocessable_entity
+      user = User.new(user_params)
+      unless role_not_allowed
+        if user.save
+          render json: user, status: :created
+        else
+          render json: {
+            'message': 'Error while creating a new user',
+            'errors': user.errors
+          }, status: :unprocessable_entity
+        end
       end
     rescue StandardError => e
-      Rails.logger.error("Error message: #{e.message}", e)
+      Rails.logger.error("Error while creating a new user: #{e.message}")
+      render json: {
+        'error': 'Error while creating a new user',
+        'errors': e.message
+      }, status: :internal_server_error
     end
   end
 
   def show
-    user = User.find(params[:id])
-    begin
-      if user.active
-        render json: user, status: :ok
-      else
-        render json: user.errors, status: :not_found
+    unless invalid_params_error
+      user = User.find(params[:id])
+      begin
+        if user.active
+          render json: user, status: :ok
+        else
+          render json: user.errors, status: :not_found
+        end
+      rescue StandardError => e
+        Rails.logger.error("Error while retrieving user #{e.message}")
       end
-    rescue StandardError => e
-      Rails.logger.error("Error while retrieving user #{e.message}")
     end
   end
 
   def update
-    user = User.find(user_params[:email])
-    if user.update(user_params)
-      render json: user, status: :ok
-    else
-      render json: user.errors, status: :unprocessable_entity
+    unless invalid_params_error || role_not_allowed
+      user = User.find(params[:id])
+
+      if user.update(user_params)
+        render json: user, status: :ok
+      else
+        render json: user.errors, status: :unprocessable_entity
+      end
     end
   end
 
-  def delete
-    user = User.find(user_params[:email])
-    if user.update(active: false)
-      render json: user, status: :deleted
-    else
-      render json: user.errors, status: :unproccessable_entity
+  def destroy
+    begin
+      unless invalid_params_error
+        user = User.find(params[:id])
+        if user.update(active: false)
+          render json: {
+            'message': 'User successfully deleted.'
+          }, status: :ok
+        else
+          render json: user.errors, status: :unproccessable_entity
+        end
+      end
+    rescue StandardError => e
+      Rails.logger.error("Error while deleting user: #{e.message}")
+      render json: {
+        'message': 'Error while deleting user',
+        'errors': e.message
+      }, status: :internal_server_error
     end
   end
 
   private
 
   def user_params
-    params.require(:user).permit(:email, :name, :role_id)
+    params.permit([:name, :email, :role_id])
   end
 
+  def invalid_params_error
+    unless params[:id].match? /\A\d+\z/
+      message = 'ID is not a numeric value'
+      Rails.logger.error(message)
+      render json: {
+        'message': message
+      }, status: :unprocessable_entity
+    end
+  end
+
+  def role_not_allowed
+    render json: {
+        'message': 'Error while creating a new user',
+        'errors': 'Creation of new admin users is not allowed'
+      } if params[:role_id].to_i == 1
+  end
 end
