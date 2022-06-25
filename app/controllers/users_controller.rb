@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   def index
-    render json: User.where(active: true)
+    render json: User.where(active: true), except: :active
   end
 
   def create
@@ -9,7 +9,7 @@ class UsersController < ApplicationController
       user = User.new(user_params)
       unless role_not_allowed
         if user.save
-          render json: user, status: :created
+          render json: user, except: :active, status: :created
         else
           render json: {
             'message': 'Error while creating a new user',
@@ -20,36 +20,58 @@ class UsersController < ApplicationController
     rescue StandardError => e
       Rails.logger.error("Error while creating a new user: #{e.message}")
       render json: {
-        'error': 'Error while creating a new user',
-        'errors': e.message
+        'message': 'Error while creating a new record',
+        'errors': [e.message]
       }, status: :internal_server_error
     end
   end
 
   def show
-    unless invalid_params_error
-      user = User.find(params[:id])
-      begin
+    begin
+      unless invalid_params_error
+        user = User.find(params[:id])
         if user.active
-          render json: user, status: :ok
+          render json: user, status: :ok, except: :active
         else
           render json: user.errors, status: :not_found
         end
-      rescue StandardError => e
-        Rails.logger.error("Error while retrieving user #{e.message}")
       end
+    rescue ActiveRecord::RecordNotFound => e
+      render json: {
+        'message': 'Record not found',
+        'errors': [e.message]
+      }, status: :not_found
+    rescue StandardError => e
+      Rails.logger.error("Error while retrieving user #{e.message}")
+      render json: {
+        'message': 'Error while retrieving record',
+        'errors': [e.message]
+      }, status: :internal_server_error
     end
   end
 
   def update
-    unless invalid_params_error || role_not_allowed
-      user = User.find(params[:id])
+    begin
+      unless invalid_params_error || role_not_allowed
+        user = User.find(params[:id])
 
-      if user.update(user_params)
-        render json: user, status: :ok
-      else
-        render json: user.errors, status: :unprocessable_entity
+        if user.update(user_params)
+          render json: user, except: :active, status: :ok
+        else
+          render json: user.errors, status: :unprocessable_entity
+        end
       end
+    rescue ActiveRecord::RecordNotFound => e
+      render json: {
+        'message': 'Record not found',
+        'errors': [e.message]
+      }, status: :not_found
+    rescue StandardError => e
+      Rails.logger.error("Error while retrieving user #{e.message}")
+      render json: {
+        'message': 'Error while retrieving record',
+        'errors': [e.message]
+      }, status: :internal_server_error
     end
   end
 
@@ -65,11 +87,16 @@ class UsersController < ApplicationController
           render json: user.errors, status: :unproccessable_entity
         end
       end
+    rescue ActiveRecord::RecordNotFound => e
+      render json: {
+        'message': 'Record not found',
+        'errors': [e.message]
+      }, status: :not_found
     rescue StandardError => e
       Rails.logger.error("Error while deleting user: #{e.message}")
       render json: {
         'message': 'Error while deleting user',
-        'errors': e.message
+        'errors': [e.message]
       }, status: :internal_server_error
     end
   end
@@ -85,15 +112,18 @@ class UsersController < ApplicationController
       message = 'ID is not a numeric value'
       Rails.logger.error(message)
       render json: {
-        'message': message
+        'message': 'Invalid parameter',
+        'errors': [message]
       }, status: :unprocessable_entity
     end
   end
 
   def role_not_allowed
+    message = 'Role not allowed'
+    Rails.logger.error(message)
     render json: {
-        'message': 'Error while creating a new user',
-        'errors': 'Creation of new admin users is not allowed'
-      } if params[:role_id].to_i == 1
+        'message': message,
+        'errors': ['Creation of new admin users is not allowed']
+      }, status: :forbidden if params[:role_id].to_i == 1
   end
 end

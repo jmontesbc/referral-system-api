@@ -12,6 +12,12 @@ class RolesController < ApplicationController
       else
         render json: role.errors, status: :unprocessable_entity
       end
+    rescue ActionController::ParameterMissing => e
+      Rails.logger.error("Error while creating new role: #{e.message}")
+      render json: {
+        'message': 'Parameter missing',
+        'errors': e.message
+      }, status: :unprocessable_entity
     rescue StandardError => e
       Rails.logger.error("Error while creating new role: #{e.message}")
       render json: {
