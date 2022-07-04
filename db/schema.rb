@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_06_06_011017) do
+ActiveRecord::Schema.define(version: 2022_06_27_175216) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -32,43 +32,20 @@ ActiveRecord::Schema.define(version: 2022_06_06_011017) do
     t.index ["view_id"], name: "index_permissions_on_view_id"
   end
 
-  create_table "pos_ref_histories", force: :cascade do |t|
-    t.bigint "positions_referral_id", null: false
-    t.bigint "position_referral_status_id", null: false
-    t.bigint "user_id", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["position_referral_status_id"], name: "index_pos_ref_histories_on_position_referral_status_id"
-    t.index ["positions_referral_id"], name: "index_pos_ref_histories_on_positions_referral_id"
-    t.index ["user_id"], name: "index_pos_ref_histories_on_user_id"
-  end
-
-  create_table "position_referral_statuses", force: :cascade do |t|
-    t.string "status"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-  end
-
-  create_table "positions_referrals", force: :cascade do |t|
-    t.bigint "referral_id", null: false
-    t.datetime "signed_date"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["referral_id"], name: "index_positions_referrals_on_referral_id"
-  end
-
   create_table "referrals", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.string "first_name"
-    t.string "given_name"
-    t.string "last_name"
+    t.integer "referred_by"
+    t.string "full_name"
     t.string "phone_number"
     t.string "email"
     t.string "linkedin_url"
     t.string "cv_url"
+    t.text "tech_stack"
+    t.integer "ta_recruiter"
+    t.integer "status"
+    t.text "comments"
+    t.date "signed_date"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.index ["user_id"], name: "index_referrals_on_user_id"
   end
 
   create_table "roles", force: :cascade do |t|
@@ -96,10 +73,5 @@ ActiveRecord::Schema.define(version: 2022_06_06_011017) do
   add_foreign_key "permissions", "actions"
   add_foreign_key "permissions", "users"
   add_foreign_key "permissions", "views"
-  add_foreign_key "pos_ref_histories", "position_referral_statuses"
-  add_foreign_key "pos_ref_histories", "positions_referrals"
-  add_foreign_key "pos_ref_histories", "users"
-  add_foreign_key "positions_referrals", "referrals"
-  add_foreign_key "referrals", "users"
   add_foreign_key "users", "roles"
 end

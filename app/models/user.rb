@@ -10,5 +10,4 @@ class User < ApplicationRecord
             format: { with: URI::MailTo::EMAIL_REGEXP, message: "Invalid e-mail address" },
             uniqueness: { case_sensitive: false },
             length: { minimum: 4, maximum: 254 }
-  validates :email, uniqueness: { case_sensitive: false }
 end
