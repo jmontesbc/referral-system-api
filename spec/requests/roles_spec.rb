@@ -1,7 +1,21 @@
-require 'rails_helper'
+require 'swagger_helper'
 
-RSpec.describe "Roles", type: :request do
-  describe "GET /index" do
-    pending "add some examples (or delete) #{__FILE__}"
+RSpec.describe 'roles', type: :request do
+
+  path '/roles' do
+
+    post('create role') do
+      response(200, 'successful') do
+
+        after do |example|
+          example.metadata[:response][:content] = {
+            'application/json' => {
+              example: JSON.parse(response.body, symbolize_names: true)
+            }
+          }
+        end
+        run_test!
+      end
+    end
   end
 end
