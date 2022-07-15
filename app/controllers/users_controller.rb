@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   def index
-    render json: User.where(active: true), except: :active
+    render json: User.where(active: true), except: [:active, :created_at, :updated_at]
   end
 
   def create
@@ -9,7 +9,7 @@ class UsersController < ApplicationController
       user = User.new(user_params)
       unless role_not_allowed
         if user.save
-          render json: user, except: :active, status: :created
+          render json: user, except: [:active, :created_at, :updated_at], status: :created
         else
           render json: {
             'message': 'Error while creating a new user',
@@ -31,7 +31,7 @@ class UsersController < ApplicationController
       unless invalid_params_error
         user = User.find(params[:id])
         if user.active
-          render json: user, status: :ok, except: :active
+          render json: user, status: :ok, except: [:active, :created_at, :updated_at]
         else
           render json: user.errors, status: :not_found
         end
@@ -56,7 +56,7 @@ class UsersController < ApplicationController
         user = User.find(params[:id])
 
         if user.update(user_params)
-          render json: user, except: :active, status: :ok
+          render json: user, except: [:active, :created_at, :updated_at], status: :ok
         else
           render json: user.errors, status: :unprocessable_entity
         end

@@ -1,21 +1,19 @@
 class ReferralsController < ApplicationController
 
   def index
-    render json: Referral.all
+    render json: Referral.all, except: [:created_at, :updated_at]
   end
 
   def create
     begin
       referral = Referral.new(referral_params)
-      unless role_not_allowed
-        if referral.save
-          render json: referral, status: :created
-        else
-          render json: {
-            'message': 'Error while creating a new referral',
-            'errors': referral.errors
-          }, status: :unprocessable_entity
-        end
+      if referral.save
+        render json: referral, except: [:created_at, :updated_at], status: :created
+      else
+        render json: {
+          'message': 'Error while creating a new referral',
+          'errors': referral.errors
+        }, status: :unprocessable_entity
       end
     rescue StandardError => e
       Rails.logger.error("Error while creating a new referral: #{e.message}")
@@ -30,11 +28,7 @@ class ReferralsController < ApplicationController
     begin
       unless invalid_params_error
         referral = Referral.find(params[:id])
-        if referral.active
-          render json: referral, status: :ok, except: :active
-        else
-          render json: referral.errors, status: :not_found
-        end
+        render json: referral, status: :ok, except: [:created_at, :updated_at]
       end
     rescue ActiveRecord::RecordNotFound => e
       render json: {
@@ -52,11 +46,11 @@ class ReferralsController < ApplicationController
 
   def update
     begin
-      unless invalid_params_error || role_not_allowed
+      unless invalid_params_error
         referral = Referral.find(params[:id])
 
         if referral.update(referral_params)
-          render json: referral, except: :active, status: :ok
+          render json: referral, except: [:created_at, :updated_at], status: :ok
         else
           render json: referral.errors, status: :unprocessable_entity
         end
